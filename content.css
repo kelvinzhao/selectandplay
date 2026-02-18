@@ -1,0 +1,443 @@
+/**
+ * Select & Play - Content Styles
+ * 浮窗UI样式，提供清晰的视觉反馈
+ */
+
+/* CSS 变量定义 */
+:root {
+  --sasp-primary: #2563eb;
+  --sasp-primary-hover: #1d4ed8;
+  --sasp-success: #10b981;
+  --sasp-warning: #f59e0b;
+  --sasp-error: #ef4444;
+  --sasp-bg: #ffffff;
+  --sasp-bg-secondary: #f8fafc;
+  --sasp-border: #e2e8f0;
+  --sasp-text: #0f172a;
+  --sasp-text-secondary: #64748b;
+  --sasp-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  --sasp-shadow-sm: 0 2px 6px rgba(0, 0, 0, 0.1);
+  --sasp-radius: 12px;
+  --sasp-radius-sm: 8px;
+}
+
+/* ==================== 浮窗容器 ==================== */
+.sasp-float-panel {
+  position: fixed;
+  z-index: 2147483647;
+  background: var(--sasp-bg);
+  border-radius: var(--sasp-radius);
+  box-shadow: var(--sasp-shadow);
+  border: 1px solid var(--sasp-border);
+  min-width: 280px;
+  max-width: 400px;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
+    'Helvetica Neue', Arial, 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  font-size: 14px;
+  color: var(--sasp-text);
+  line-height: 1.5;
+  animation: saspFadeIn 0.2s ease-out;
+  overflow: hidden;
+}
+
+@keyframes saspFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ==================== 浮窗头部 ==================== */
+.sasp-panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  background: var(--sasp-bg-secondary);
+  border-bottom: 1px solid var(--sasp-border);
+}
+
+.sasp-header-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.sasp-header-title {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 600;
+  font-size: 13px;
+  color: var(--sasp-primary);
+}
+
+.sasp-header-title svg {
+  width: 16px;
+  height: 16px;
+}
+
+/* 语言标签 */
+.sasp-lang-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 500;
+  background: var(--sasp-primary);
+  color: white;
+}
+
+.sasp-lang-badge.zh {
+  background: #ef4444;
+}
+
+.sasp-lang-badge.en {
+  background: #3b82f6;
+}
+
+.sasp-lang-badge.ja {
+  background: #8b5cf6;
+}
+
+/* 关闭按钮 */
+.sasp-close-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border: none;
+  background: transparent;
+  border-radius: 6px;
+  cursor: pointer;
+  color: var(--sasp-text-secondary);
+  transition: all 0.2s;
+}
+
+.sasp-close-btn:hover {
+  background: rgba(0, 0, 0, 0.05);
+  color: var(--sasp-error);
+}
+
+/* ==================== 浮窗内容 ==================== */
+.sasp-panel-body {
+  padding: 16px;
+}
+
+/* 文本预览 */
+.sasp-text-preview {
+  max-height: 120px;
+  overflow-y: auto;
+  padding: 12px;
+  background: var(--sasp-bg-secondary);
+  border-radius: var(--sasp-radius-sm);
+  font-size: 13px;
+  color: var(--sasp-text);
+  line-height: 1.6;
+  margin-bottom: 12px;
+  word-break: break-word;
+}
+
+.sasp-text-preview::-webkit-scrollbar {
+  width: 4px;
+}
+
+.sasp-text-preview::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.sasp-text-preview::-webkit-scrollbar-thumb {
+  background: var(--sasp-border);
+  border-radius: 2px;
+}
+
+/* ==================== 播放状态区域 ==================== */
+.sasp-play-status {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* 状态指示器 */
+.sasp-status-indicator {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border-radius: var(--sasp-radius-sm);
+  font-size: 12px;
+}
+
+.sasp-status-indicator.loading {
+  background: #eff6ff;
+  color: var(--sasp-primary);
+}
+
+.sasp-status-indicator.playing {
+  background: #dcfce7;
+  color: var(--sasp-success);
+}
+
+.sasp-status-indicator.error {
+  background: #fee2e2;
+  color: var(--sasp-error);
+}
+
+/* 加载动画 */
+.sasp-spinner {
+  width: 14px;
+  height: 14px;
+  border: 2px solid currentColor;
+  border-top-color: transparent;
+  border-radius: 50%;
+  animation: saspSpin 0.8s linear infinite;
+}
+
+@keyframes saspSpin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* 播放动画 - 音频波形 */
+.sasp-wave-indicator {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  height: 16px;
+}
+
+.sasp-wave-bar {
+  width: 3px;
+  height: 100%;
+  background: currentColor;
+  border-radius: 2px;
+  animation: saspWave 0.8s ease-in-out infinite;
+}
+
+.sasp-wave-bar:nth-child(1) {
+  animation-delay: 0s;
+}
+
+.sasp-wave-bar:nth-child(2) {
+  animation-delay: 0.1s;
+}
+
+.sasp-wave-bar:nth-child(3) {
+  animation-delay: 0.2s;
+}
+
+.sasp-wave-bar:nth-child(4) {
+  animation-delay: 0.3s;
+}
+
+.sasp-wave-bar:nth-child(5) {
+  animation-delay: 0.4s;
+}
+
+@keyframes saspWave {
+  0%, 100% {
+    height: 4px;
+  }
+  50% {
+    height: 16px;
+  }
+}
+
+/* ==================== 控制按钮区域 ==================== */
+.sasp-controls {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+}
+
+.sasp-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 10px 20px;
+  border: none;
+  border-radius: var(--sasp-radius-sm);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.sasp-btn svg {
+  width: 16px;
+  height: 16px;
+}
+
+/* 主按钮 */
+.sasp-btn-primary {
+  background: var(--sasp-primary);
+  color: white;
+}
+
+.sasp-btn-primary:hover {
+  background: var(--sasp-primary-hover);
+  transform: translateY(-1px);
+  box-shadow: var(--sasp-shadow-sm);
+}
+
+.sasp-btn-primary:active {
+  transform: translateY(0);
+}
+
+.sasp-btn-primary:disabled {
+  background: var(--sasp-border);
+  color: var(--sasp-text-secondary);
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* 次要按钮 */
+.sasp-btn-secondary {
+  background: var(--sasp-bg-secondary);
+  color: var(--sasp-text);
+  border: 1px solid var(--sasp-border);
+}
+
+.sasp-btn-secondary:hover {
+  background: #e2e8f0;
+}
+
+/* 停止按钮 */
+.sasp-btn-danger {
+  background: #fee2e2;
+  color: var(--sasp-error);
+}
+
+.sasp-btn-danger:hover {
+  background: #fecaca;
+}
+
+/* ==================== 错误提示 ==================== */
+.sasp-error-message {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 10px 12px;
+  background: #fee2e2;
+  border-radius: var(--sasp-radius-sm);
+  font-size: 12px;
+  color: #991b1b;
+}
+
+.sasp-error-message svg {
+  flex-shrink: 0;
+  width: 16px;
+  height: 16px;
+  margin-top: 1px;
+}
+
+/* ==================== 配置提示 ==================== */
+.sasp-config-notice {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  background: #fef3c7;
+  border-radius: var(--sasp-radius-sm);
+  font-size: 12px;
+  color: #92400e;
+}
+
+.sasp-config-notice svg {
+  flex-shrink: 0;
+  width: 16px;
+  height: 16px;
+}
+
+.sasp-config-link {
+  color: var(--sasp-primary);
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.sasp-config-link:hover {
+  text-decoration: underline;
+}
+
+/* ==================== 浮窗定位箭头 ==================== */
+.sasp-panel-arrow {
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  background: var(--sasp-bg);
+  border: 1px solid var(--sasp-border);
+  transform: rotate(45deg);
+}
+
+.sasp-panel-arrow.top {
+  top: -6px;
+  border-bottom: none;
+  border-right: none;
+}
+
+.sasp-panel-arrow.bottom {
+  bottom: -6px;
+  border-top: none;
+  border-left: none;
+}
+
+/* ==================== 文本高亮 ==================== */
+.sasp-text-highlight {
+  background: linear-gradient(120deg, #fef3c7 0%, #fde68a 100%);
+  background-size: 200% 100%;
+  animation: saspHighlight 1s ease-out;
+}
+
+@keyframes saspHighlight {
+  from {
+    background-position: 100% 0;
+  }
+  to {
+    background-position: 0 0;
+  }
+}
+
+/* ==================== 快捷键提示 ==================== */
+.sasp-shortcut-hint {
+  position: fixed;
+  z-index: 2147483646;
+  padding: 6px 10px;
+  background: rgba(0, 0, 0, 0.75);
+  color: white;
+  font-size: 11px;
+  border-radius: 6px;
+  pointer-events: none;
+  animation: saspFadeIn 0.15s ease-out;
+}
+
+.sasp-shortcut-hint kbd {
+  display: inline-block;
+  padding: 2px 5px;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 4px;
+  font-family: monospace;
+  margin: 0 2px;
+}
+
+/* ==================== 禁用状态 ==================== */
+.sasp-disabled .sasp-float-panel {
+  filter: grayscale(1);
+  opacity: 0.6;
+}
+
+/* ==================== 响应式 ==================== */
+@media (max-width: 480px) {
+  .sasp-float-panel {
+    min-width: auto;
+    max-width: calc(100vw - 32px);
+  }
+}
