@@ -14,9 +14,9 @@
     selectedText: '',           // 当前选中的文本
     detectedLang: '',           // 检测到的语言
     isPlaying: false,           // 是否正在播放
+    isPaused: false,            // 是否已暂停
     isLoading: false,           // 是否正在加载
     selectionRange: null,       // 选区范围
-    hideTimer: null,            // 自动隐藏定时器
     lastSelectedText: ''        // 上次选中的文本
   };
 
@@ -179,7 +179,10 @@
   function updatePanelStatus() {
     const statusContainer = state.currentPanel.querySelector('#saspPlayStatus');
 
+    // 状态优先级：加载中 > 播放中 > 已暂停 > 初始状态
+
     if (state.isLoading) {
+      // 1. 加载中状态（最高优先级）
       statusContainer.innerHTML = `
         <div class="sasp-status-indicator loading">
           <div class="sasp-spinner"></div>
@@ -187,6 +190,7 @@
         </div>
       `;
     } else if (state.isPlaying) {
+      // 2. 播放中状态
       statusContainer.innerHTML = `
         <div class="sasp-status-indicator playing">
           <div class="sasp-wave-indicator">
@@ -211,10 +215,11 @@
       `;
       state.currentPanel.querySelector('#saspPauseBtn').addEventListener('click', pauseAudio);
       state.currentPanel.querySelector('#saspStopBtn').addEventListener('click', stopAudio);
-    } else if (state.currentAudio && state.currentAudio.paused) {
+    } else if (state.isPaused && state.currentAudio) {
+      // 3. 已暂停状态（有音频但暂停中）
       statusContainer.innerHTML = `
         <div class="sasp-controls">
-          <button class="sasp-btn sasp-btn-primary" id="saspPlayBtn">
+          <button class="sasp-btn sasp-btn-primary" id="saspResumeBtn">
             ${createIcon('play', 16)}
             继续播放
           </button>
@@ -224,9 +229,10 @@
           </button>
         </div>
       `;
-      state.currentPanel.querySelector('#saspPlayBtn').addEventListener('click', resumeAudio);
+      state.currentPanel.querySelector('#saspResumeBtn').addEventListener('click', resumeAudio);
       state.currentPanel.querySelector('#saspStopBtn').addEventListener('click', stopAudio);
     } else {
+      // 4. 初始状态（无音频或已停止）
       statusContainer.innerHTML = `
         <div class="sasp-controls">
           <button class="sasp-btn sasp-btn-primary" id="saspPlayBtn">
@@ -235,9 +241,7 @@
           </button>
         </div>
       `;
-      state.currentPanel.querySelector('#saspPlayBtn').addEventListener('click', () => {
-        startTTS();
-      });
+      state.currentPanel.querySelector('#saspPlayBtn').addEventListener('click', startTTS);
     }
   }
 
@@ -265,6 +269,10 @@
    * 显示错误信息
    */
   function showError(message) {
+    state.isLoading = false;
+    state.isPlaying = false;
+    state.isPaused = false;
+
     const statusContainer = state.currentPanel.querySelector('#saspPlayStatus');
     statusContainer.innerHTML = `
       <div class="sasp-error-message">
@@ -290,12 +298,6 @@
     // 移除旧浮窗
     if (state.currentPanel) {
       state.currentPanel.remove();
-    }
-
-    // 清除自动隐藏定时器
-    if (state.hideTimer) {
-      clearTimeout(state.hideTimer);
-      state.hideTimer = null;
     }
 
     const selection = window.getSelection();
@@ -378,19 +380,28 @@
   // ==================== TTS 功能 ====================
 
   /**
-   * 停止当前音频
+   * 清理音频资源
    */
-  function stopAudio() {
+  function cleanupAudio() {
     if (state.currentAudio) {
       state.currentAudio.pause();
       state.currentAudio.onended = null;
       state.currentAudio.onerror = null;
+      state.currentAudio.onpause = null;
       if (state.currentAudio.audioUrl) {
         URL.revokeObjectURL(state.currentAudio.audioUrl);
       }
       state.currentAudio = null;
     }
+  }
+
+  /**
+   * 停止当前音频
+   */
+  function stopAudio() {
+    cleanupAudio();
     state.isPlaying = false;
+    state.isPaused = false;
     state.isLoading = false;
     if (state.currentPanel) {
       updatePanelStatus();
@@ -401,12 +412,11 @@
    * 暂停音频
    */
   function pauseAudio() {
-    if (state.currentAudio) {
+    if (state.currentAudio && state.isPlaying) {
       state.currentAudio.pause();
       state.isPlaying = false;
-      if (state.currentPanel) {
-        updatePanelStatus();
-      }
+      state.isPaused = true;
+      // 不立即更新UI，等pause事件触发后再更新
     }
   }
 
@@ -414,12 +424,11 @@
    * 恢复播放
    */
   function resumeAudio() {
-    if (state.currentAudio) {
+    if (state.currentAudio && state.isPaused) {
       state.currentAudio.play();
       state.isPlaying = true;
-      if (state.currentPanel) {
-        updatePanelStatus();
-      }
+      state.isPaused = false;
+      // UI会在playing事件触发后更新
     }
   }
 
@@ -436,6 +445,10 @@
       return;
     }
 
+    // 清理之前的音频（但不调用stopAudio，避免重置UI状态）
+    cleanupAudio();
+    state.isPlaying = false;
+    state.isPaused = false;
     state.isLoading = true;
     updatePanelStatus();
 
@@ -474,34 +487,31 @@
       const audioBlob = new Blob([audioContent], { type: 'audio/mp3' });
       const audioUrl = URL.createObjectURL(audioBlob);
 
-      state.isLoading = false;
-
-      // 停止当前音频
-      stopAudio();
-
       // 创建新音频
       const audio = new Audio(audioUrl);
       audio.audioUrl = audioUrl;
       state.currentAudio = audio;
 
+      // 设置事件监听器
       audio.onended = () => {
         state.isPlaying = false;
+        state.isPaused = false;
         updatePanelStatus();
       };
 
       audio.onerror = () => {
-        state.isPlaying = false;
-        state.isLoading = false;
         showError('音频播放失败，请重试');
       };
 
+      // 开始播放
       await audio.play();
+      state.isLoading = false;
       state.isPlaying = true;
+      state.isPaused = false;
       updatePanelStatus();
 
     } catch (error) {
       console.error('[Select & Play] TTS错误:', error);
-      state.isLoading = false;
       showError(error.message || '语音合成失败，请稍后重试');
     }
   }
@@ -530,7 +540,7 @@
 
     // 没有选中文本
     if (!selectedText) {
-      if (state.currentPanel && !state.isPlaying) {
+      if (state.currentPanel && !state.isPlaying && !state.isPaused) {
         hidePanel();
       }
       state.lastSelectedText = '';
@@ -559,7 +569,7 @@
 
   // 点击空白处隐藏浮窗
   document.addEventListener('mousedown', (e) => {
-    if (state.currentPanel && !state.currentPanel.contains(e.target) && !state.isPlaying) {
+    if (state.currentPanel && !state.currentPanel.contains(e.target) && !state.isPlaying && !state.isPaused) {
       hidePanel();
     }
   });
