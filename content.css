@@ -38,6 +38,20 @@
   box-sizing: border-box;
 }
 
+/* SVG 图标样式恢复 */
+.sasp-float-panel svg {
+  display: block !important;
+  width: auto !important;
+  height: auto !important;
+}
+
+/* SVG 内部元素样式恢复 */
+.sasp-float-panel svg *,
+.sasp-float-panel svg *::before,
+.sasp-float-panel svg *::after {
+  all: revert;
+}
+
 /* ==================== 浮窗容器 ==================== */
 .sasp-float-panel {
   position: fixed !important;

@@ -416,7 +416,10 @@
       state.currentAudio.pause();
       state.isPlaying = false;
       state.isPaused = true;
-      // 不立即更新UI，等pause事件触发后再更新
+      // 立即更新UI
+      if (state.currentPanel) {
+        updatePanelStatus();
+      }
     }
   }
 
@@ -428,7 +431,10 @@
       state.currentAudio.play();
       state.isPlaying = true;
       state.isPaused = false;
-      // UI会在playing事件触发后更新
+      // 立即更新UI
+      if (state.currentPanel) {
+        updatePanelStatus();
+      }
     }
   }
 
