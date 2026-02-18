@@ -52,6 +52,16 @@
   all: revert;
 }
 
+/* 动画元素样式恢复 */
+.sasp-float-panel .sasp-spinner-mini,
+.sasp-float-panel .sasp-wave-indicator-mini,
+.sasp-float-panel .sasp-wave-bar,
+.sasp-float-panel .sasp-spinner-mini *,
+.sasp-float-panel .sasp-wave-indicator-mini *,
+.sasp-float-panel .sasp-wave-bar * {
+  all: revert;
+}
+
 /* ==================== 浮窗容器 ==================== */
 .sasp-float-panel {
   position: fixed !important;
