@@ -118,24 +118,50 @@
     const panelWidth = 320;
     const panelHeight = 200;
     const margin = 16;
-    const arrowOffset = 20;
+    const scrollTop = window.scrollY;
+    const scrollLeft = window.scrollX;
+    const viewportWidth = window.innerWidth;
+    const viewportHeight = window.innerHeight;
 
-    let top = rect.bottom + window.scrollY + margin + 12;
-    let left = rect.left + window.scrollX + (rect.width - panelWidth) / 2;
+    // 默认显示在选区下方
+    let top = rect.bottom + scrollTop + margin;
+    let left = rect.left + scrollLeft + (rect.width - panelWidth) / 2;
 
-    // 边界检测
+    // 水平边界检测
     if (left < margin) left = margin;
-    if (left + panelWidth > window.innerWidth - margin) {
-      left = window.innerWidth - panelWidth - margin;
+    if (left + panelWidth > viewportWidth + scrollLeft - margin) {
+      left = viewportWidth + scrollLeft - panelWidth - margin;
     }
+
+    // 垂直边界检测
+    const spaceBelow = viewportHeight - rect.bottom;
+    const spaceAbove = rect.top;
 
     // 下方空间不足时显示在选区上方
-    const spaceBelow = window.innerHeight - rect.bottom;
-    if (spaceBelow < panelHeight + margin && rect.top > panelHeight + margin) {
-      top = rect.top + window.scrollY - panelHeight - margin - 12;
+    if (spaceBelow < panelHeight + margin) {
+      if (spaceAbove >= panelHeight + margin) {
+        // 上方有足够空间，显示在上方
+        top = rect.top + scrollTop - panelHeight - margin;
+      } else {
+        // 上下都不够，放在顶部或底部，选空间大的
+        if (rect.top + scrollTop > panelHeight + margin) {
+          // 选区比较靠下，显示在上方
+          top = Math.max(scrollTop + margin, rect.top + scrollTop - panelHeight - margin);
+        } else {
+          // 选区比较靠上，显示在下方
+          top = Math.min(scrollTop + viewportHeight - panelHeight - margin, rect.bottom + scrollTop + margin);
+        }
+      }
     }
 
-    return { top, left, arrowPosition: 'top' };
+    // 确保不会超出顶部
+    if (top < scrollTop + margin) top = scrollTop + margin;
+    // 确保不会超出底部
+    if (top + panelHeight > scrollTop + viewportHeight - margin) {
+      top = scrollTop + viewportHeight - panelHeight - margin;
+    }
+
+    return { top, left };
   }
 
   /**
