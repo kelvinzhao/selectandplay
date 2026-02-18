@@ -61,25 +61,39 @@
     const range = sel.getRangeAt(0);
     const rect = range.getBoundingClientRect();
 
-    const panelW = 300, panelH = 200, gap = 12;
+    const panelW = 300, panelH = 220, gap = 16;
     const winW = window.innerWidth;
     const winH = window.innerHeight;
-    const scrollX = window.scrollX;
-    const scrollY = window.scrollY;
 
-    // 默认：选区下方居中
-    let left = rect.left + scrollX + rect.width / 2 - panelW / 2;
-    let top = rect.bottom + scrollY + gap;
+    // 注意：CSS 使用 position: fixed，所以 top/left 是相对于视口的
+    // 不需要加 scrollX/scrollY
+
+    // 默认位置：选区下方居中
+    let left = rect.left + rect.width / 2 - panelW / 2;
+    let top = rect.bottom + gap;
+
+    // 计算可用空间
+    const spaceBelow = winH - rect.bottom;
+    const spaceAbove = rect.top;
+
+    // 如果下方空间不足且上方空间足够，放上方
+    if (spaceBelow < panelH + gap && spaceAbove >= panelH + gap) {
+      top = rect.top - panelH - gap;
+    }
 
     // 水平边界
-    left = Math.max(gap, Math.min(left, scrollX + winW - panelW - gap));
+    if (left < gap) left = gap;
+    if (left + panelW > winW - gap) left = winW - panelW - gap;
 
-    // 垂直边界：下方不够则放上方
-    if (rect.bottom + panelH + gap > winH && rect.top > panelH + gap) {
-      top = rect.top + scrollY - panelH - gap;
-    }
-    // 确保不超出顶部和底部
-    top = Math.max(scrollY + gap, Math.min(top, scrollY + winH - panelH - gap));
+    // 垂直边界：至少保留顶部边距
+    if (top < gap) top = gap;
+
+    console.log('[Select&Play] 定位:', {
+      rect: { top: Math.round(rect.top), bottom: Math.round(rect.bottom), left: Math.round(rect.left) },
+      viewport: { width: winW, height: winH },
+      space: { above: Math.round(spaceAbove), below: Math.round(spaceBelow) },
+      result: { top: Math.round(top), left: Math.round(left) }
+    });
 
     return { top, left };
   }
