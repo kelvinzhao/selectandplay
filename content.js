@@ -461,13 +461,25 @@
     try {
       const settings = await chrome.storage.sync.get('ttsSettings');
       const ttsSettings = settings.ttsSettings || {};
-      const voiceSettings = ttsSettings[state.detectedLang] || {
-        voice: 'zh-CN-XiaoxiaoNeural',
-        speed: '1.0'
+
+      // 默认语音配置（与 options.js 保持一致）
+      const defaultVoices = {
+        'chinese': { voice: 'zh-CN-XiaoxiaoNeural', speed: '1.0' },
+        'english': { voice: 'en-US-JennyNeural', speed: '1.0' },
+        'japanese': { voice: 'ja-JP-NanamiNeural', speed: '1.0' }
+      };
+
+      const voiceSettings = ttsSettings[state.detectedLang] || defaultVoices[state.detectedLang] || defaultVoices['chinese'];
+
+      // 根据 XML lang 属性
+      const langMap = {
+        'chinese': 'zh-CN',
+        'english': 'en-US',
+        'japanese': 'ja-JP'
       };
 
       // 构建SSML
-      let ssml = `<speak version="1.0" xmlns="http://www.w3.org/2001/10/synthesis" xml:lang="zh-CN">
+      let ssml = `<speak version="1.0" xmlns="http://www.w3.org/2001/10/synthesis" xml:lang="${langMap[state.detectedLang] || 'zh-CN'}">
         <voice name="${voiceSettings.voice}">
           <prosody rate="${voiceSettings.speed}">${escapeXml(state.selectedText)}</prosody>
         </voice>

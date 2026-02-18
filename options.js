@@ -188,9 +188,25 @@
     // 更新状态
     state.azureConfig = { region, key };
 
+    // 准备保存的数据
+    const saveData = { azureConfig: state.azureConfig };
+
+    // 如果语音设置还未保存过，保存默认值
+    const existingSettings = await chrome.storage.sync.get('ttsSettings');
+    if (!existingSettings.ttsSettings) {
+      const defaultTtsSettings = {
+        chinese: { voice: 'zh-CN-XiaoxiaoNeural', speed: '1.0' },
+        english: { voice: 'en-US-JennyNeural', speed: '1.0' },
+        japanese: { voice: 'ja-JP-NanamiNeural', speed: '1.0' }
+      };
+      saveData.ttsSettings = defaultTtsSettings;
+      state.ttsSettings = defaultTtsSettings;
+      updateVoiceSettingsUI();
+    }
+
     // 保存到存储
     try {
-      await chrome.storage.sync.set({ azureConfig: state.azureConfig });
+      await chrome.storage.sync.set(saveData);
       updateAzureStatus();
       showToast('配置保存成功', 'success');
     } catch (error) {
