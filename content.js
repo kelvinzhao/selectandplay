@@ -153,14 +153,17 @@
           </div>
           <span class="sasp-lang-badge" id="saspLangBadge"></span>
         </div>
-        <button class="sasp-close-btn" id="saspCloseBtn" title="关闭">
-          ${createIcon('close', 16)}
-        </button>
+        <div class="sasp-header-right">
+          <div class="sasp-status-indicator" id="saspStatusIndicator"></div>
+          <button class="sasp-close-btn" id="saspCloseBtn" title="关闭">
+            ${createIcon('close', 16)}
+          </button>
+        </div>
       </div>
       <div class="sasp-panel-body">
         <div class="sasp-text-preview" id="saspTextPreview"></div>
-        <div class="sasp-play-status" id="saspPlayStatus">
-          <!-- 状态指示器 -->
+        <div class="sasp-play-controls" id="saspPlayControls">
+          <!-- 控制按钮 -->
         </div>
       </div>
     `;
@@ -177,31 +180,34 @@
    * 更新浮窗状态显示
    */
   function updatePanelStatus() {
-    const statusContainer = state.currentPanel.querySelector('#saspPlayStatus');
+    const statusIndicator = state.currentPanel.querySelector('#saspStatusIndicator');
+    const controlsContainer = state.currentPanel.querySelector('#saspPlayControls');
 
-    // 状态优先级：加载中 > 播放中 > 已暂停 > 初始状态
-
+    // 更新右上角状态指示器
     if (state.isLoading) {
-      // 1. 加载中状态（最高优先级）
-      statusContainer.innerHTML = `
-        <div class="sasp-status-indicator loading">
-          <div class="sasp-spinner"></div>
-          <span>正在合成语音...</span>
+      statusIndicator.className = 'sasp-status-indicator loading';
+      statusIndicator.innerHTML = '<div class="sasp-spinner-mini"></div>';
+    } else if (state.isPlaying) {
+      statusIndicator.className = 'sasp-status-indicator playing';
+      statusIndicator.innerHTML = `
+        <div class="sasp-wave-indicator-mini">
+          <div class="sasp-wave-bar"></div>
+          <div class="sasp-wave-bar"></div>
+          <div class="sasp-wave-bar"></div>
         </div>
       `;
-    } else if (state.isPlaying) {
-      // 2. 播放中状态
-      statusContainer.innerHTML = `
-        <div class="sasp-status-indicator playing">
-          <div class="sasp-wave-indicator">
-            <div class="sasp-wave-bar"></div>
-            <div class="sasp-wave-bar"></div>
-            <div class="sasp-wave-bar"></div>
-            <div class="sasp-wave-bar"></div>
-            <div class="sasp-wave-bar"></div>
-          </div>
-          <span>正在播放...</span>
-        </div>
+    } else if (state.isPaused && state.currentAudio) {
+      statusIndicator.className = 'sasp-status-indicator paused';
+      statusIndicator.innerHTML = '<span>⏸</span>';
+    } else {
+      statusIndicator.className = 'sasp-status-indicator idle';
+      statusIndicator.innerHTML = '';
+    }
+
+    // 更新控制按钮区域
+    if (state.isPlaying) {
+      // 播放中：暂停 + 停止
+      controlsContainer.innerHTML = `
         <div class="sasp-controls">
           <button class="sasp-btn sasp-btn-secondary" id="saspPauseBtn">
             ${createIcon('pause', 16)}
@@ -216,12 +222,12 @@
       state.currentPanel.querySelector('#saspPauseBtn').addEventListener('click', pauseAudio);
       state.currentPanel.querySelector('#saspStopBtn').addEventListener('click', stopAudio);
     } else if (state.isPaused && state.currentAudio) {
-      // 3. 已暂停状态（有音频但暂停中）
-      statusContainer.innerHTML = `
+      // 已暂停：继续 + 停止
+      controlsContainer.innerHTML = `
         <div class="sasp-controls">
           <button class="sasp-btn sasp-btn-primary" id="saspResumeBtn">
             ${createIcon('play', 16)}
-            继续播放
+            继续
           </button>
           <button class="sasp-btn sasp-btn-danger" id="saspStopBtn">
             ${createIcon('stop', 16)}
@@ -232,8 +238,8 @@
       state.currentPanel.querySelector('#saspResumeBtn').addEventListener('click', resumeAudio);
       state.currentPanel.querySelector('#saspStopBtn').addEventListener('click', stopAudio);
     } else {
-      // 4. 初始状态（无音频或已停止）
-      statusContainer.innerHTML = `
+      // 初始状态：播放
+      controlsContainer.innerHTML = `
         <div class="sasp-controls">
           <button class="sasp-btn sasp-btn-primary" id="saspPlayBtn">
             ${createIcon('play', 16)}

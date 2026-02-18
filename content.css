@@ -138,6 +138,70 @@
 }
 
 /* 关闭按钮 */
+.sasp-header-right {
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+}
+
+/* 状态指示器（右上角） */
+.sasp-status-indicator {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 20px !important;
+  height: 20px !important;
+}
+
+.sasp-status-indicator.idle {
+  display: none !important;
+}
+
+/* 迷你加载动画 */
+.sasp-spinner-mini {
+  width: 14px !important;
+  height: 14px !important;
+  border: 2px solid currentColor !important;
+  border-top-color: transparent !important;
+  border-radius: 50% !important;
+  animation: saspSpin 0.8s linear infinite !important;
+  color: var(--sasp-primary) !important;
+}
+
+/* 迷你波形动画 */
+.sasp-wave-indicator-mini {
+  display: flex !important;
+  align-items: center !important;
+  gap: 2px !important;
+  height: 12px !important;
+}
+
+.sasp-wave-indicator-mini .sasp-wave-bar {
+  width: 2px !important;
+  height: 100% !important;
+  background: var(--sasp-success) !important;
+  border-radius: 1px !important;
+  animation: saspWave 0.8s ease-in-out infinite !important;
+}
+
+.sasp-wave-indicator-mini .sasp-wave-bar:nth-child(1) {
+  animation-delay: 0s !important;
+}
+
+.sasp-wave-indicator-mini .sasp-wave-bar:nth-child(2) {
+  animation-delay: 0.15s !important;
+}
+
+.sasp-wave-indicator-mini .sasp-wave-bar:nth-child(3) {
+  animation-delay: 0.3s !important;
+}
+
+.sasp-status-indicator.paused {
+  font-size: 12px !important;
+  color: var(--sasp-warning) !important;
+}
+
+/* 关闭按钮 */
 .sasp-close-btn {
   display: flex !important;
   align-items: center !important;
@@ -195,90 +259,17 @@
   border-radius: 2px !important;
 }
 
-/* ==================== 播放状态区域 ==================== */
-.sasp-play-status {
+/* ==================== 控制按钮区域 ==================== */
+.sasp-play-controls {
   display: flex !important;
-  flex-direction: column !important;
-  gap: 12px !important;
+  justify-content: center !important;
 }
 
-/* 状态指示器 */
-.sasp-status-indicator {
-  display: flex !important;
-  align-items: center !important;
-  gap: 8px !important;
-  padding: 8px 12px !important;
-  border-radius: var(--sasp-radius-sm) !important;
-  font-size: 12px !important;
-}
-
-.sasp-status-indicator.loading {
-  background: #eff6ff !important;
-  color: var(--sasp-primary) !important;
-}
-
-.sasp-status-indicator.playing {
-  background: #dcfce7 !important;
-  color: var(--sasp-success) !important;
-}
-
-.sasp-status-indicator.error {
-  background: #fee2e2 !important;
-  color: var(--sasp-error) !important;
-}
-
-/* 加载动画 */
-.sasp-spinner {
-  width: 14px !important;
-  height: 14px !important;
-  border: 2px solid currentColor !important;
-  border-top-color: transparent !important;
-  border-radius: 50% !important;
-  animation: saspSpin 0.8s linear infinite !important;
-  flex-shrink: 0 !important;
-}
-
+/* 动画关键帧 */
 @keyframes saspSpin {
   to {
     transform: rotate(360deg);
   }
-}
-
-/* 播放动画 - 音频波形 */
-.sasp-wave-indicator {
-  display: flex !important;
-  align-items: center !important;
-  gap: 3px !important;
-  height: 16px !important;
-}
-
-.sasp-wave-bar {
-  width: 3px !important;
-  height: 100% !important;
-  background: currentColor !important;
-  border-radius: 2px !important;
-  animation: saspWave 0.8s ease-in-out infinite !important;
-  flex-shrink: 0 !important;
-}
-
-.sasp-wave-bar:nth-child(1) {
-  animation-delay: 0s !important;
-}
-
-.sasp-wave-bar:nth-child(2) {
-  animation-delay: 0.1s !important;
-}
-
-.sasp-wave-bar:nth-child(3) {
-  animation-delay: 0.2s !important;
-}
-
-.sasp-wave-bar:nth-child(4) {
-  animation-delay: 0.3s !important;
-}
-
-.sasp-wave-bar:nth-child(5) {
-  animation-delay: 0.4s !important;
 }
 
 @keyframes saspWave {
