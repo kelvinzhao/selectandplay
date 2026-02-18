@@ -8,644 +8,370 @@
 
   // ==================== 状态管理 ====================
   const state = {
-    isEnabled: false,           // 扩展是否启用
-    currentPanel: null,         // 当前浮窗元素
-    currentAudio: null,         // 当前音频实例
-    selectedText: '',           // 当前选中的文本
-    detectedLang: '',           // 检测到的语言
-    isPlaying: false,           // 是否正在播放
-    isPaused: false,            // 是否已暂停
-    isLoading: false,           // 是否正在加载
-    selectionRange: null,       // 选区范围
-    lastSelectedText: ''        // 上次选中的文本
+    isEnabled: false,
+    panel: null,
+    audio: null,
+    text: '',
+    lang: 'chinese',
+    status: 'idle', // 'idle' | 'loading' | 'playing' | 'paused'
+    lastText: ''
   };
 
-  // 语言标签映射
-  const langLabels = {
-    'chinese': '中文',
-    'english': 'English',
-    'japanese': '日本語'
+  // ==================== 常量定义 ====================
+  const LANG_INFO = {
+    chinese: { label: '中文', class: 'zh', voice: 'zh-CN-XiaoxiaoNeural' },
+    english: { label: 'English', class: 'en', voice: 'en-US-JennyNeural' },
+    japanese: { label: '日本語', class: 'ja', voice: 'ja-JP-NanamiNeural' }
   };
 
-  const langClasses = {
-    'chinese': 'zh',
-    'english': 'en',
-    'japanese': 'ja'
+  const SVG_ICONS = {
+    speaker: '<svg viewBox="0 0 24 24"><path d="M11 5L6 9H2v6h4l5 4V5z"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>',
+    close: '<svg viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12"/></svg>',
+    play: '<svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>',
+    pause: '<svg viewBox="0 0 24 24"><rect x="6" y="4" width="4" height="16" rx="1"/><rect x="14" y="4" width="4" height="16" rx="1"/></svg>',
+    stop: '<svg viewBox="0 0 24 24"><rect x="6" y="6" width="12" height="12" rx="2"/></svg>',
+    error: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 8v4m0 4h.01"/></svg>',
+    warning: '<svg viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0zM12 9v4m0 4h.01"/></svg>'
   };
 
   // ==================== 工具函数 ====================
 
-  /**
-   * 防抖函数
-   */
-  function debounce(func, wait) {
-    let timer = null;
-    return function executedFunction(...args) {
-      if (timer) clearTimeout(timer);
-      timer = setTimeout(() => {
-        timer = null;
-        func.apply(this, args);
-      }, wait);
+  function debounce(fn, ms) {
+    let timer;
+    return (...args) => {
+      clearTimeout(timer);
+      timer = setTimeout(() => fn(...args), ms);
     };
   }
 
-  /**
-   * 检测文本语言
-   */
   function detectLanguage(text) {
-    const trimmedText = text.trim();
-    const chineseChars = (trimmedText.match(/[\u4e00-\u9fa5]/g) || []).length;
-    const japaneseChars = (trimmedText.match(/[\u3040-\u309f\u30a0-\u30ff]/g) || []).length;
-    const kanjiChars = (trimmedText.match(/[\u4e00-\u9faf]/g) || []).length;
-    const englishChars = (trimmedText.match(/[a-zA-Z]/g) || []).length;
-    const totalLength = trimmedText.length;
-
-    // 优先检查日文假名
-    if (japaneseChars > 0) {
-      return 'japanese';
-    }
-
-    // 检查中文特征
-    const hasChineseMarkers = /[的了吗呢吧啊呀嘛着呢个们把给让在和与为]/.test(trimmedText);
-    if (hasChineseMarkers && chineseChars > 0) {
-      return 'chinese';
-    }
-
-    // 检查日文助词
-    const hasJapaneseMarkers = /[はがのにをでへとやからまでだけ]/.test(trimmedText);
-    if (hasJapaneseMarkers && !hasChineseMarkers) {
-      return 'japanese';
-    }
-
-    // 英文检测
-    if (englishChars > totalLength * 0.5 && japaneseChars === 0 && chineseChars === 0) {
-      return 'english';
-    }
-
-    // 默认中文
-    if (chineseChars > 0) {
-      return 'chinese';
-    }
-    return 'english';
+    const t = text.trim();
+    if (/[\u3040-\u309f\u30a0-\u30ff]/.test(t)) return 'japanese';
+    if (/[\u4e00-\u9fa5]/.test(t)) return 'chinese';
+    if (/[a-zA-Z]/.test(t) && !/[\u4e00-\u9fa5]/.test(t)) return 'english';
+    return 'chinese';
   }
 
-  /**
-   * 创建SVG图标
-   */
-  function createIcon(name, size = 16) {
-    const icons = {
-      close: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>',
-      play: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>',
-      pause: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 4h4v16H6zM14 4h4v16h-4z"/></svg>',
-      stop: '<svg viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="6" width="12" height="12" rx="1"/></svg>',
-      loading: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10" opacity="0.25"/><path d="M12 2a10 10 0 0 1 10 10"/></svg>',
-      error: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v4m0 4h.01"/></svg>',
-      warning: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0zM12 9v4m0 4h.01"/></svg>',
-      speaker: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 5L6 9H2v6h4l5 4V5z"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>'
-    };
+  // ==================== 定位计算 ====================
 
-    const svg = icons[name] || icons.play;
-    return `<svg width="${size}" height="${size}" viewBox="${svg.match(/viewBox="([^"]+)"/)[1]}">${svg.substring(svg.indexOf('>') + 1)}</svg>`;
-  }
+  function getPosition() {
+    const sel = window.getSelection();
+    if (!sel.rangeCount) return null;
 
-  // ==================== 浮窗管理 ====================
+    const range = sel.getRangeAt(0);
+    const rect = range.getBoundingClientRect();
 
-  /**
-   * 计算浮窗位置
-   */
-  function calculatePosition(selection) {
-    const rect = selection.getRangeAt(0).getBoundingClientRect();
-    const panelWidth = 320;
-    const panelHeight = 200;
-    const margin = 16;
-    const scrollTop = window.scrollY;
-    const scrollLeft = window.scrollX;
-    const viewportWidth = window.innerWidth;
-    const viewportHeight = window.innerHeight;
+    const panelW = 300, panelH = 200, gap = 12;
+    const winW = window.innerWidth;
+    const winH = window.innerHeight;
+    const scrollX = window.scrollX;
+    const scrollY = window.scrollY;
 
-    // 默认显示在选区下方
-    let top = rect.bottom + scrollTop + margin;
-    let left = rect.left + scrollLeft + (rect.width - panelWidth) / 2;
+    // 默认：选区下方居中
+    let left = rect.left + scrollX + rect.width / 2 - panelW / 2;
+    let top = rect.bottom + scrollY + gap;
 
-    // 水平边界检测
-    if (left < margin) left = margin;
-    if (left + panelWidth > viewportWidth + scrollLeft - margin) {
-      left = viewportWidth + scrollLeft - panelWidth - margin;
+    // 水平边界
+    left = Math.max(gap, Math.min(left, scrollX + winW - panelW - gap));
+
+    // 垂直边界：下方不够则放上方
+    if (rect.bottom + panelH + gap > winH && rect.top > panelH + gap) {
+      top = rect.top + scrollY - panelH - gap;
     }
-
-    // 垂直边界检测
-    const spaceBelow = viewportHeight - rect.bottom;
-    const spaceAbove = rect.top;
-
-    // 下方空间不足时显示在选区上方
-    if (spaceBelow < panelHeight + margin) {
-      if (spaceAbove >= panelHeight + margin) {
-        // 上方有足够空间，显示在上方
-        top = rect.top + scrollTop - panelHeight - margin;
-      } else {
-        // 上下都不够，放在顶部或底部，选空间大的
-        if (rect.top + scrollTop > panelHeight + margin) {
-          // 选区比较靠下，显示在上方
-          top = Math.max(scrollTop + margin, rect.top + scrollTop - panelHeight - margin);
-        } else {
-          // 选区比较靠上，显示在下方
-          top = Math.min(scrollTop + viewportHeight - panelHeight - margin, rect.bottom + scrollTop + margin);
-        }
-      }
-    }
-
-    // 确保不会超出顶部
-    if (top < scrollTop + margin) top = scrollTop + margin;
-    // 确保不会超出底部
-    if (top + panelHeight > scrollTop + viewportHeight - margin) {
-      top = scrollTop + viewportHeight - panelHeight - margin;
-    }
+    // 确保不超出顶部和底部
+    top = Math.max(scrollY + gap, Math.min(top, scrollY + winH - panelH - gap));
 
     return { top, left };
   }
 
-  /**
-   * 创建浮窗元素
-   */
+  // ==================== 浮窗创建 ====================
+
   function createPanel() {
-    const panel = document.createElement('div');
-    panel.className = 'sasp-float-panel';
-    panel.innerHTML = `
-      <div class="sasp-panel-header">
+    const p = document.createElement('div');
+    p.className = 'sasp-panel';
+    p.innerHTML = `
+      <div class="sasp-header">
         <div class="sasp-header-left">
-          <div class="sasp-header-title">
-            ${createIcon('speaker', 16)}
-            <span>语音朗读</span>
-          </div>
-          <span class="sasp-lang-badge" id="saspLangBadge"></span>
+          <span class="sasp-title">${SVG_ICONS.speaker}语音朗读</span>
+          <span class="sasp-lang" id="sasp-lang"></span>
         </div>
         <div class="sasp-header-right">
-          <div class="sasp-status-indicator" id="saspStatusIndicator"></div>
-          <button class="sasp-close-btn" id="saspCloseBtn" title="关闭">
-            ${createIcon('close', 16)}
-          </button>
+          <span class="sasp-status" id="sasp-status"></span>
+          <button class="sasp-close" id="sasp-close">${SVG_ICONS.close}</button>
         </div>
       </div>
-      <div class="sasp-panel-body">
-        <div class="sasp-text-preview" id="saspTextPreview"></div>
-        <div class="sasp-play-controls" id="saspPlayControls">
-          <!-- 控制按钮 -->
-        </div>
+      <div class="sasp-body">
+        <div class="sasp-preview" id="sasp-preview"></div>
+        <div class="sasp-controls" id="sasp-controls"></div>
       </div>
     `;
-
-    // 绑定事件
-    panel.querySelector('#saspCloseBtn').addEventListener('click', hidePanel);
-    panel.addEventListener('mousedown', (e) => e.stopPropagation());
-    panel.addEventListener('mouseup', (e) => e.stopPropagation());
-
-    return panel;
+    return p;
   }
 
-  /**
-   * 更新浮窗状态显示
-   */
-  function updatePanelStatus() {
-    const statusIndicator = state.currentPanel.querySelector('#saspStatusIndicator');
-    const controlsContainer = state.currentPanel.querySelector('#saspPlayControls');
+  // ==================== UI 更新 ====================
 
-    // 更新右上角状态指示器
-    if (state.isLoading) {
-      statusIndicator.className = 'sasp-status-indicator loading';
-      statusIndicator.innerHTML = '<div class="sasp-spinner-mini"></div>';
-    } else if (state.isPlaying) {
-      statusIndicator.className = 'sasp-status-indicator playing';
-      statusIndicator.innerHTML = `
-        <div class="sasp-wave-indicator-mini">
-          <div class="sasp-wave-bar"></div>
-          <div class="sasp-wave-bar"></div>
-          <div class="sasp-wave-bar"></div>
-        </div>
-      `;
-    } else if (state.isPaused && state.currentAudio) {
-      statusIndicator.className = 'sasp-status-indicator paused';
-      statusIndicator.innerHTML = '<span>⏸</span>';
-    } else {
-      statusIndicator.className = 'sasp-status-indicator idle';
-      statusIndicator.innerHTML = '';
+  function updateStatus() {
+    const statusEl = state.panel?.querySelector('#sasp-status');
+    const controlsEl = state.panel?.querySelector('#sasp-controls');
+
+    if (!statusEl || !controlsEl) return;
+
+    // 状态指示器
+    statusEl.className = 'sasp-status sasp-status-' + state.status;
+
+    switch (state.status) {
+      case 'loading':
+        statusEl.innerHTML = '<span class="sasp-spinner"></span>';
+        break;
+      case 'playing':
+        statusEl.innerHTML = '<span class="sasp-wave"><i></i><i></i><i></i></span>';
+        break;
+      case 'paused':
+        statusEl.innerHTML = '<span class="sasp-paused">||</span>';
+        break;
+      default:
+        statusEl.innerHTML = '';
     }
 
-    // 更新控制按钮区域
-    if (state.isPlaying) {
-      // 播放中：暂停 + 停止
-      controlsContainer.innerHTML = `
-        <div class="sasp-controls">
-          <button class="sasp-btn sasp-btn-secondary" id="saspPauseBtn">
-            ${createIcon('pause', 16)}
-            暂停
-          </button>
-          <button class="sasp-btn sasp-btn-danger" id="saspStopBtn">
-            ${createIcon('stop', 16)}
-            停止
-          </button>
-        </div>
-      `;
-      state.currentPanel.querySelector('#saspPauseBtn').addEventListener('click', pauseAudio);
-      state.currentPanel.querySelector('#saspStopBtn').addEventListener('click', stopAudio);
-    } else if (state.isPaused && state.currentAudio) {
-      // 已暂停：继续 + 停止
-      controlsContainer.innerHTML = `
-        <div class="sasp-controls">
-          <button class="sasp-btn sasp-btn-primary" id="saspResumeBtn">
-            ${createIcon('play', 16)}
-            继续
-          </button>
-          <button class="sasp-btn sasp-btn-danger" id="saspStopBtn">
-            ${createIcon('stop', 16)}
-            停止
-          </button>
-        </div>
-      `;
-      state.currentPanel.querySelector('#saspResumeBtn').addEventListener('click', resumeAudio);
-      state.currentPanel.querySelector('#saspStopBtn').addEventListener('click', stopAudio);
-    } else {
-      // 初始状态：播放
-      controlsContainer.innerHTML = `
-        <div class="sasp-controls">
-          <button class="sasp-btn sasp-btn-primary" id="saspPlayBtn">
-            ${createIcon('play', 16)}
-            播放
-          </button>
-        </div>
-      `;
-      state.currentPanel.querySelector('#saspPlayBtn').addEventListener('click', startTTS);
+    // 控制按钮
+    switch (state.status) {
+      case 'playing':
+        controlsEl.innerHTML = `
+          <button class="sasp-btn sasp-btn-secondary" data-action="pause">${SVG_ICONS.pause}暂停</button>
+          <button class="sasp-btn sasp-btn-danger" data-action="stop">${SVG_ICONS.stop}停止</button>
+        `;
+        break;
+      case 'paused':
+        controlsEl.innerHTML = `
+          <button class="sasp-btn sasp-btn-primary" data-action="resume">${SVG_ICONS.play}继续</button>
+          <button class="sasp-btn sasp-btn-danger" data-action="stop">${SVG_ICONS.stop}停止</button>
+        `;
+        break;
+      default:
+        controlsEl.innerHTML = `
+          <button class="sasp-btn sasp-btn-primary" data-action="play">${SVG_ICONS.play}播放</button>
+        `;
     }
+
+    // 绑定按钮事件
+    controlsEl.querySelectorAll('button').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const action = btn.dataset.action;
+        if (action === 'play') startTTS();
+        else if (action === 'pause') pause();
+        else if (action === 'resume') resume();
+        else if (action === 'stop') stop();
+      });
+    });
   }
 
-  /**
-   * 显示配置提示
-   */
+  function showError(msg) {
+    state.status = 'idle';
+    const controlsEl = state.panel?.querySelector('#sasp-controls');
+    if (controlsEl) {
+      controlsEl.innerHTML = `
+        <div class="sasp-error">${SVG_ICONS.error}${msg}</div>
+        <button class="sasp-btn sasp-btn-secondary" data-action="retry">${SVG_ICONS.play}重试</button>
+      `;
+      controlsEl.querySelector('button').addEventListener('click', () => startTTS());
+    }
+    updateStatus();
+  }
+
   function showConfigNotice() {
-    const statusContainer = state.currentPanel.querySelector('#saspPlayStatus');
-    statusContainer.innerHTML = `
-      <div class="sasp-config-notice">
-        ${createIcon('warning', 16)}
-        <span>
-          请先配置
-          <a href="#" class="sasp-config-link" id="saspConfigLink">Azure TTS 服务</a>
-        </span>
-      </div>
-    `;
-    state.currentPanel.querySelector('#saspConfigLink').addEventListener('click', (e) => {
-      e.preventDefault();
-      chrome.runtime.openOptionsPage();
-    });
-  }
-
-  /**
-   * 显示错误信息
-   */
-  function showError(message) {
-    state.isLoading = false;
-    state.isPlaying = false;
-    state.isPaused = false;
-
-    const statusContainer = state.currentPanel.querySelector('#saspPlayStatus');
-    statusContainer.innerHTML = `
-      <div class="sasp-error-message">
-        ${createIcon('error', 16)}
-        <span>${message}</span>
-      </div>
-      <div class="sasp-controls">
-        <button class="sasp-btn sasp-btn-secondary" id="saspRetryBtn">
-          ${createIcon('play', 16)}
-          重试
-        </button>
-      </div>
-    `;
-    state.currentPanel.querySelector('#saspRetryBtn')?.addEventListener('click', () => {
-      startTTS();
-    });
-  }
-
-  /**
-   * 显示浮窗
-   */
-  function showPanel() {
-    // 移除旧浮窗
-    if (state.currentPanel) {
-      state.currentPanel.remove();
+    const controlsEl = state.panel?.querySelector('#sasp-controls');
+    if (controlsEl) {
+      controlsEl.innerHTML = `
+        <div class="sasp-notice">${SVG_ICONS.warning}请先配置 <a href="#" id="sasp-config-link">Azure TTS</a></div>
+      `;
+      controlsEl.querySelector('#sasp-config-link').addEventListener('click', (e) => {
+        e.preventDefault();
+        chrome.runtime.openOptionsPage();
+      });
     }
+  }
 
-    const selection = window.getSelection();
-    if (!selection.rangeCount) return;
+  // ==================== 浮窗显示/隐藏 ====================
 
-    // 检测语言
-    state.detectedLang = detectLanguage(state.selectedText);
+  function showPanel() {
+    hidePanel();
 
-    // 创建新浮窗
-    state.currentPanel = createPanel();
-    document.body.appendChild(state.currentPanel);
+    const pos = getPosition();
+    if (!pos) return;
 
-    // 设置位置
-    const position = calculatePosition(selection);
-    state.currentPanel.style.top = position.top + 'px';
-    state.currentPanel.style.left = position.left + 'px';
+    state.panel = createPanel();
+    state.panel.style.top = pos.top + 'px';
+    state.panel.style.left = pos.left + 'px';
+    document.body.appendChild(state.panel);
 
-    // 更新内容
-    const preview = state.currentPanel.querySelector('#saspTextPreview');
-    preview.textContent = state.selectedText.length > 200
-      ? state.selectedText.substring(0, 200) + '...'
-      : state.selectedText;
+    // 设置内容
+    state.panel.querySelector('#sasp-preview').textContent =
+      state.text.length > 150 ? state.text.slice(0, 150) + '...' : state.text;
 
-    const langBadge = state.currentPanel.querySelector('#saspLangBadge');
-    langBadge.textContent = langLabels[state.detectedLang] || state.detectedLang;
-    langBadge.className = `sasp-lang-badge ${langClasses[state.detectedLang] || ''}`;
+    const langInfo = LANG_INFO[state.lang];
+    const langEl = state.panel.querySelector('#sasp-lang');
+    langEl.textContent = langInfo.label;
+    langEl.className = 'sasp-lang sasp-lang-' + langInfo.class;
+
+    // 绑定关闭
+    state.panel.querySelector('#sasp-close').addEventListener('click', hidePanel);
 
     // 更新状态
-    updatePanelStatus();
-
-    // 高亮选中的文本
-    highlightSelection();
+    state.status = 'idle';
+    updateStatus();
   }
 
-  /**
-   * 隐藏浮窗
-   */
   function hidePanel() {
-    if (state.currentPanel) {
-      state.currentPanel.remove();
-      state.currentPanel = null;
-    }
-    removeHighlight();
-  }
-
-  /**
-   * 高亮选中的文本
-   */
-  function highlightSelection() {
-    removeHighlight();
-    const selection = window.getSelection();
-    if (!selection.rangeCount) return;
-
-    try {
-      const range = selection.getRangeAt(0);
-      const span = document.createElement('span');
-      span.className = 'sasp-text-highlight';
-      range.surroundContents(span);
-      state.selectionRange = range;
-    } catch (e) {
-      // 跨元素选择无法高亮，忽略
+    if (state.panel) {
+      state.panel.remove();
+      state.panel = null;
     }
   }
 
-  /**
-   * 移除高亮
-   */
-  function removeHighlight() {
-    const highlights = document.querySelectorAll('.sasp-text-highlight');
-    highlights.forEach(el => {
-      const parent = el.parentNode;
-      while (el.firstChild) {
-        parent.insertBefore(el.firstChild, el);
-      }
-      parent.removeChild(el);
-    });
-    state.selectionRange = null;
-  }
+  // ==================== 音频控制 ====================
 
-  // ==================== TTS 功能 ====================
-
-  /**
-   * 清理音频资源
-   */
-  function cleanupAudio() {
-    if (state.currentAudio) {
-      state.currentAudio.pause();
-      state.currentAudio.onended = null;
-      state.currentAudio.onerror = null;
-      state.currentAudio.onpause = null;
-      if (state.currentAudio.audioUrl) {
-        URL.revokeObjectURL(state.currentAudio.audioUrl);
-      }
-      state.currentAudio = null;
+  function cleanup() {
+    if (state.audio) {
+      state.audio.pause();
+      state.audio.onended = null;
+      state.audio.onerror = null;
+      if (state.audio.src) URL.revokeObjectURL(state.audio.src);
+      state.audio = null;
     }
   }
 
-  /**
-   * 停止当前音频
-   */
-  function stopAudio() {
-    cleanupAudio();
-    state.isPlaying = false;
-    state.isPaused = false;
-    state.isLoading = false;
-    if (state.currentPanel) {
-      updatePanelStatus();
+  function stop() {
+    cleanup();
+    state.status = 'idle';
+    updateStatus();
+  }
+
+  function pause() {
+    if (state.audio) {
+      state.audio.pause();
+      state.status = 'paused';
+      updateStatus();
     }
   }
 
-  /**
-   * 暂停音频
-   */
-  function pauseAudio() {
-    if (state.currentAudio && state.isPlaying) {
-      state.currentAudio.pause();
-      state.isPlaying = false;
-      state.isPaused = true;
-      // 立即更新UI
-      if (state.currentPanel) {
-        updatePanelStatus();
-      }
+  function resume() {
+    if (state.audio) {
+      state.audio.play();
+      state.status = 'playing';
+      updateStatus();
     }
   }
 
-  /**
-   * 恢复播放
-   */
-  function resumeAudio() {
-    if (state.currentAudio && state.isPaused) {
-      state.currentAudio.play();
-      state.isPlaying = true;
-      state.isPaused = false;
-      // 立即更新UI
-      if (state.currentPanel) {
-        updatePanelStatus();
-      }
-    }
-  }
-
-  /**
-   * 开始TTS合成和播放
-   */
   async function startTTS() {
-    if (!state.selectedText || state.isLoading) return;
+    if (!state.text) return;
 
-    // 检查配置
     const config = await chrome.storage.sync.get('azureConfig');
-    if (!config.azureConfig || !config.azureConfig.key || !config.azureConfig.region) {
+    if (!config.azureConfig?.key || !config.azureConfig?.region) {
       showConfigNotice();
       return;
     }
 
-    // 清理之前的音频（但不调用stopAudio，避免重置UI状态）
-    cleanupAudio();
-    state.isPlaying = false;
-    state.isPaused = false;
-    state.isLoading = true;
-    updatePanelStatus();
+    cleanup();
+    state.status = 'loading';
+    updateStatus();
 
     try {
       const settings = await chrome.storage.sync.get('ttsSettings');
       const ttsSettings = settings.ttsSettings || {};
+      const langInfo = LANG_INFO[state.lang];
+      const voiceSetting = ttsSettings[state.lang] || { voice: langInfo.voice, speed: '1.0' };
 
-      // 默认语音配置（与 options.js 保持一致）
-      const defaultVoices = {
-        'chinese': { voice: 'zh-CN-XiaoxiaoNeural', speed: '1.0' },
-        'english': { voice: 'en-US-JennyNeural', speed: '1.0' },
-        'japanese': { voice: 'ja-JP-NanamiNeural', speed: '1.0' }
-      };
-
-      const voiceSettings = ttsSettings[state.detectedLang] || defaultVoices[state.detectedLang] || defaultVoices['chinese'];
-
-      // 根据 XML lang 属性
-      const langMap = {
-        'chinese': 'zh-CN',
-        'english': 'en-US',
-        'japanese': 'ja-JP'
-      };
-
-      // 构建SSML
-      let ssml = `<speak version="1.0" xmlns="http://www.w3.org/2001/10/synthesis" xml:lang="${langMap[state.detectedLang] || 'zh-CN'}">
-        <voice name="${voiceSettings.voice}">
-          <prosody rate="${voiceSettings.speed}">${escapeXml(state.selectedText)}</prosody>
+      const langMap = { chinese: 'zh-CN', english: 'en-US', japanese: 'ja-JP' };
+      const ssml = `<speak version="1.0" xmlns="http://www.w3.org/2001/10/synthesis" xml:lang="${langMap[state.lang]}">
+        <voice name="${voiceSetting.voice}">
+          <prosody rate="${voiceSetting.speed}">${escapeXml(state.text)}</prosody>
         </voice>
       </speak>`;
 
-      // 调用Azure TTS API
-      const response = await fetch(`https://${config.azureConfig.region}.tts.speech.microsoft.com/cognitiveservices/v1`, {
+      const res = await fetch(`https://${config.azureConfig.region}.tts.speech.microsoft.com/cognitiveservices/v1`, {
         method: 'POST',
         headers: {
           'Ocp-Apim-Subscription-Key': config.azureConfig.key,
           'Content-Type': 'application/ssml+xml',
-          'X-Microsoft-OutputFormat': 'audio-16khz-128kbitrate-mono-mp3',
-          'User-Agent': 'Select-and-Play-Extension'
+          'X-Microsoft-OutputFormat': 'audio-16khz-128kbitrate-mono-mp3'
         },
         body: ssml
       });
 
-      if (!response.ok) {
-        throw new Error(`TTS请求失败: ${response.status}`);
-      }
+      if (!res.ok) throw new Error(`TTS错误: ${res.status}`);
 
-      const audioContent = await response.arrayBuffer();
-      const audioBlob = new Blob([audioContent], { type: 'audio/mp3' });
-      const audioUrl = URL.createObjectURL(audioBlob);
+      const blob = new Blob([await res.arrayBuffer()], { type: 'audio/mp3' });
+      state.audio = new Audio(URL.createObjectURL(blob));
+      state.audio.onended = () => { state.status = 'idle'; updateStatus(); };
+      state.audio.onerror = () => showError('播放失败');
 
-      // 创建新音频
-      const audio = new Audio(audioUrl);
-      audio.audioUrl = audioUrl;
-      state.currentAudio = audio;
+      await state.audio.play();
+      state.status = 'playing';
+      updateStatus();
 
-      // 设置事件监听器
-      audio.onended = () => {
-        state.isPlaying = false;
-        state.isPaused = false;
-        updatePanelStatus();
-      };
-
-      audio.onerror = () => {
-        showError('音频播放失败，请重试');
-      };
-
-      // 开始播放
-      await audio.play();
-      state.isLoading = false;
-      state.isPlaying = true;
-      state.isPaused = false;
-      updatePanelStatus();
-
-    } catch (error) {
-      console.error('[Select & Play] TTS错误:', error);
-      showError(error.message || '语音合成失败，请稍后重试');
+    } catch (err) {
+      console.error('[TTS]', err);
+      showError(err.message || '请求失败');
     }
   }
 
-  /**
-   * XML转义
-   */
-  function escapeXml(text) {
-    return text
-      .replace(/&/g, '&amp;')
-      .replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;')
-      .replace(/"/g, '&quot;')
-      .replace(/'/g, '&apos;');
+  function escapeXml(s) {
+    return s.replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&apos;'}[c]));
   }
 
-  // ==================== 事件处理 ====================
+  // ==================== 事件监听 ====================
 
-  /**
-   * 处理文本选择
-   */
-  function handleTextSelection() {
+  function handleSelect() {
     if (!state.isEnabled) return;
 
-    const selectedText = window.getSelection().toString().trim();
-
-    // 没有选中文本
-    if (!selectedText) {
-      if (state.currentPanel && !state.isPlaying && !state.isPaused) {
-        hidePanel();
-      }
-      state.lastSelectedText = '';
+    const text = window.getSelection().toString().trim();
+    if (!text) {
+      if (state.status === 'idle') hidePanel();
+      state.lastText = '';
       return;
     }
 
-    // 与上次相同，忽略
-    if (selectedText === state.lastSelectedText && state.currentPanel) {
-      return;
-    }
+    if (text === state.lastText) return;
 
-    state.selectedText = selectedText;
-    state.lastSelectedText = selectedText;
+    state.text = text;
+    state.lastText = text;
+    state.lang = detectLanguage(text);
     showPanel();
   }
 
-  // 防抖处理
-  const debouncedHandleSelection = debounce(handleTextSelection, 200);
+  const debouncedSelect = debounce(handleSelect, 150);
 
-  // 监听选择事件
-  document.addEventListener('mouseup', debouncedHandleSelection);
+  document.addEventListener('mouseup', debouncedSelect);
   document.addEventListener('keyup', (e) => {
-    if (e.key === 'Shift' || e.key === 'Control' || e.key === 'Alt') return;
-    debouncedHandleSelection();
+    if (!e.shiftKey && !e.ctrlKey && !e.altKey) debouncedSelect();
   });
 
-  // 点击空白处隐藏浮窗
   document.addEventListener('mousedown', (e) => {
-    if (state.currentPanel && !state.currentPanel.contains(e.target) && !state.isPlaying && !state.isPaused) {
+    if (state.panel && !state.panel.contains(e.target) && state.status === 'idle') {
       hidePanel();
     }
   });
 
+  // 阻止面板内事件冒泡
+  document.addEventListener('mousedown', (e) => {
+    if (state.panel?.contains(e.target)) e.stopPropagation();
+  }, true);
+
   // ==================== 消息监听 ====================
 
-  chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-    if (message.action === 'toggleState') {
-      state.isEnabled = message.isEnabled;
-      if (!state.isEnabled) {
-        stopAudio();
-        hidePanel();
-      }
+  chrome.runtime.onMessage.addListener((msg, sender, send) => {
+    if (msg.action === 'toggleState') {
+      state.isEnabled = msg.isEnabled;
+      if (!state.isEnabled) { stop(); hidePanel(); }
     }
-    if (message.action === 'getState') {
-      sendResponse({ isEnabled: state.isEnabled });
-    }
+    if (msg.action === 'getState') send({ isEnabled: state.isEnabled });
     return true;
   });
 
   // ==================== 初始化 ====================
 
-  // 获取启用状态
-  chrome.storage.sync.get(['isEnabled'], (result) => {
-    state.isEnabled = result.isEnabled !== false;
-    console.log('[Select & Play] 初始化完成，状态:', state.isEnabled ? '启用' : '禁用');
+  chrome.storage.sync.get(['isEnabled'], (r) => {
+    state.isEnabled = r.isEnabled !== false;
   });
 
 })();
