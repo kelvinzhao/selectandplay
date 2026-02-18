@@ -437,6 +437,55 @@ body {
   font-size: 13px;
 }
 
+/* ==================== 模式选择器 ==================== */
+.mode-selector {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+}
+
+.mode-option {
+  cursor: pointer;
+}
+
+.mode-option input[type="radio"] {
+  display: none;
+}
+
+.mode-card {
+  display: flex;
+  flex-direction: column;
+  padding: 20px;
+  border: 2px solid var(--border);
+  border-radius: var(--radius-sm);
+  transition: all 0.2s;
+  background: var(--bg);
+}
+
+.mode-card:hover {
+  border-color: #bfdbfe;
+  background: var(--primary-light);
+}
+
+.mode-option input[type="radio"]:checked + .mode-card {
+  border-color: var(--primary);
+  background: var(--primary-light);
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+.mode-info h3 {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 8px;
+}
+
+.mode-info p {
+  font-size: 13px;
+  color: var(--text-secondary);
+  line-height: 1.6;
+}
+
 /* ==================== 选项卡 ==================== */
 .tabs {
   display: flex;

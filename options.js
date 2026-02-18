@@ -8,6 +8,8 @@
 
   // ==================== DOM 元素 ====================
   const elements = {
+    modeMini: document.getElementById('modeMini'),
+    modeStandard: document.getElementById('modeStandard'),
     azureForm: document.getElementById('azureForm'),
     azureRegion: document.getElementById('azureRegion'),
     azureKey: document.getElementById('azureKey'),
@@ -23,6 +25,7 @@
 
   // ==================== 状态管理 ====================
   let state = {
+    uiMode: 'mini',  // 'mini' | 'standard'
     azureConfig: null,
     ttsSettings: {}
   };
@@ -46,7 +49,8 @@
    */
   async function loadConfig() {
     try {
-      const result = await chrome.storage.sync.get(['azureConfig', 'ttsSettings']);
+      const result = await chrome.storage.sync.get(['uiMode', 'azureConfig', 'ttsSettings']);
+      state.uiMode = result.uiMode || 'mini';
       state.azureConfig = result.azureConfig || { region: '', key: '' };
       state.ttsSettings = result.ttsSettings || {
         chinese: { voice: 'zh-CN-XiaoxiaoNeural', speed: '1.0' },
@@ -64,6 +68,10 @@
    * 绑定事件
    */
   function bindEvents() {
+    // UI 模式选择
+    elements.modeMini.addEventListener('change', () => handleModeChange('mini'));
+    elements.modeStandard.addEventListener('change', () => handleModeChange('standard'));
+
     // Azure 表单提交
     elements.azureForm.addEventListener('submit', handleAzureSave);
 
@@ -88,7 +96,7 @@
         slider.addEventListener('input', (e) => {
           const valueLabel = form.querySelector('.speed-value');
           if (valueLabel) {
-            valueLabel.textContent = e.target.value + 'x';
+            valueLabel.textContent = parseFloat(e.target.value).toFixed(1) + 'x';
           }
         });
       }
@@ -99,6 +107,10 @@
    * 更新UI
    */
   function updateUI() {
+    // 更新 UI 模式选择
+    elements.modeMini.checked = state.uiMode === 'mini';
+    elements.modeStandard.checked = state.uiMode === 'standard';
+
     // 更新 Azure 配置表单
     if (state.azureConfig) {
       elements.azureRegion.value = state.azureConfig.region || '';
@@ -134,7 +146,7 @@
         speedSlider.value = settings.speed;
       }
       if (speedValue && settings.speed) {
-        speedValue.textContent = settings.speed + 'x';
+        speedValue.textContent = parseFloat(settings.speed).toFixed(1) + 'x';
       }
     });
   }
@@ -149,6 +161,23 @@
       elements.azureStatus.innerHTML = '<span class="status-badge status-valid">已配置</span>';
     } else {
       elements.azureStatus.innerHTML = '<span class="status-badge status-unknown">未配置</span>';
+    }
+  }
+
+  /**
+   * 处理UI模式变更
+   */
+  async function handleModeChange(mode) {
+    if (state.uiMode === mode) return;
+
+    state.uiMode = mode;
+
+    try {
+      await chrome.storage.sync.set({ uiMode: mode });
+      showToast(`已切换到${mode === 'mini' ? '简洁版' : '标准版'}模式`, 'success');
+    } catch (error) {
+      console.error('[Select & Play Options] 保存模式失败:', error);
+      showToast('保存失败，请重试', 'error');
     }
   }
 

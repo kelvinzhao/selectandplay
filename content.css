@@ -1,6 +1,146 @@
 /* Select & Play - Content Styles */
 
-/* ==================== 面板容器 ==================== */
+/* ==================== 迷你面板样式 ==================== */
+.sasp-mini {
+  position: fixed !important;
+  z-index: 2147483647 !important;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  background: #fff;
+  border-radius: 20px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.12);
+  border: 1px solid #e5e7eb;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-size: 13px;
+  animation: saspFadeIn 0.15s ease-out;
+}
+
+@keyframes saspFadeIn {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* 语言标签 */
+.sasp-lang {
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-size: 11px;
+  font-weight: 600;
+  color: #fff;
+  flex-shrink: 0;
+}
+
+.sasp-lang-zh { background: #ef4444; }
+.sasp-lang-en { background: #3b82f6; }
+.sasp-lang-ja { background: #8b5cf6; }
+
+/* 迷你面板按钮 */
+.sasp-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  border: none;
+  border-radius: 14px;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s;
+  color: #374151;
+  background: #f3f4f6;
+}
+
+
+.sasp-btn:disabled {
+  opacity: 0.7;
+  cursor: default;
+}
+
+.sasp-btn svg {
+  width: 12px;
+  height: 12px;
+  fill: currentColor;
+}
+
+/* 迷你面板关闭按钮 */
+.sasp-close {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border: none;
+  background: transparent;
+  border-radius: 50%;
+  cursor: pointer;
+  padding: 0;
+  flex-shrink: 0;
+  transition: background 0.15s;
+}
+
+
+.sasp-close svg {
+  width: 12px;
+  height: 12px;
+  stroke: #9ca3af;
+  stroke-width: 2;
+  fill: none;
+}
+
+/* 加载动画 */
+.sasp-spinner {
+  display: block;
+  width: 14px;
+  height: 14px;
+  border: 2px solid #e5e7eb;
+  border-top-color: #2563eb;
+  border-radius: 50%;
+  animation: saspSpin 0.8s linear infinite;
+}
+
+@keyframes saspSpin {
+  to { transform: rotate(360deg); }
+}
+
+/* 迷你面板播放状态 */
+.sasp-mini.sasp-status-playing .sasp-btn {
+  padding-right: 20px;
+  position: relative;
+}
+
+.sasp-mini.sasp-status-playing .sasp-btn::after {
+  content: '';
+  position: absolute;
+  right: 6px;
+  width: 8px;
+  height: 8px;
+  background: #10b981;
+  border-radius: 50%;
+  animation: saspDot 1.2s ease-in-out infinite;
+}
+
+@keyframes saspDot {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.5; transform: scale(0.8); }
+}
+
+.sasp-mini.sasp-status-playing {
+  border-color: #10b981;
+  box-shadow: 0 4px 20px rgba(16, 185, 129, 0.2);
+}
+
+.sasp-mini.sasp-status-paused {
+  border-color: #fcd34d;
+}
+
+.sasp-mini.sasp-status-paused .sasp-btn {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+/* ==================== 标准面板样式 ==================== */
 .sasp-panel {
   position: fixed !important;
   z-index: 2147483647 !important;
@@ -16,12 +156,7 @@
   animation: saspFadeIn 0.15s ease-out;
 }
 
-@keyframes saspFadeIn {
-  from { opacity: 0; transform: translateY(-4px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
-/* ==================== 头部 ==================== */
+/* 头部 */
 .sasp-header {
   display: flex;
   align-items: center;
@@ -53,7 +188,7 @@
   gap: 8px;
 }
 
-/* ==================== SVG 图标 ==================== */
+/* SVG 图标 */
 .sasp-panel svg {
   width: 14px;
   height: 14px;
@@ -61,10 +196,7 @@
   vertical-align: middle;
 }
 
-.sasp-title svg,
-.sasp-lang + .sasp-title svg {
-  width: 14px;
-  height: 14px;
+.sasp-title svg {
   stroke: #2563eb;
   fill: none;
   stroke-width: 2;
@@ -74,30 +206,14 @@
 
 .sasp-close svg {
   stroke: #9ca3af;
-  stroke-width: 2;
   fill: none;
+  stroke-width: 2;
   stroke-linecap: round;
   stroke-linejoin: round;
 }
 
-.sasp-close:hover svg {
-  stroke: #ef4444;
-}
 
-/* ==================== 语言标签 ==================== */
-.sasp-lang {
-  padding: 2px 8px;
-  border-radius: 10px;
-  font-size: 11px;
-  font-weight: 500;
-  color: #fff;
-}
-
-.sasp-lang-zh { background: #ef4444; }
-.sasp-lang-en { background: #3b82f6; }
-.sasp-lang-ja { background: #8b5cf6; }
-
-/* ==================== 状态指示器 ==================== */
+/* 状态指示器 */
 .sasp-status {
   display: flex;
   align-items: center;
@@ -107,21 +223,6 @@
 }
 
 .sasp-status-idle { display: none; }
-
-/* 加载动画 */
-.sasp-spinner {
-  display: block;
-  width: 14px;
-  height: 14px;
-  border: 2px solid #e5e7eb;
-  border-top-color: #2563eb;
-  border-radius: 50%;
-  animation: saspSpin 0.8s linear infinite;
-}
-
-@keyframes saspSpin {
-  to { transform: rotate(360deg); }
-}
 
 /* 播放波形 */
 .sasp-wave {
@@ -155,7 +256,7 @@
   font-weight: bold;
 }
 
-/* ==================== 内容区 ==================== */
+/* 内容区 */
 .sasp-body {
   padding: 12px;
 }
@@ -182,7 +283,7 @@
   border-radius: 2px;
 }
 
-/* ==================== 控制按钮 ==================== */
+/* 控制按钮 */
 .sasp-controls {
   display: flex;
   justify-content: center;
@@ -216,9 +317,6 @@
   color: #fff;
 }
 
-.sasp-btn-primary:hover {
-  background: #1d4ed8;
-}
 
 .sasp-btn-secondary {
   background: #f3f4f6;
@@ -226,9 +324,6 @@
   border: 1px solid #e5e7eb;
 }
 
-.sasp-btn-secondary:hover {
-  background: #e5e7eb;
-}
 
 .sasp-btn-danger {
   background: #fef2f2;
@@ -236,30 +331,8 @@
   border: 1px solid #fecaca;
 }
 
-.sasp-btn-danger:hover {
-  background: #fee2e2;
-}
 
-/* ==================== 关闭按钮 ==================== */
-.sasp-close {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 24px;
-  height: 24px;
-  border: none;
-  background: transparent;
-  border-radius: 6px;
-  cursor: pointer;
-  padding: 0;
-  transition: background 0.15s;
-}
-
-.sasp-close:hover {
-  background: #f3f4f6;
-}
-
-/* ==================== 错误/提示 ==================== */
+/* 错误/提示 */
 .sasp-error {
   display: flex;
   align-items: center;
@@ -303,17 +376,4 @@
 
 .sasp-notice a:hover {
   text-decoration: underline;
-}
-
-/* ==================== 文本高亮 ==================== */
-.sasp-text-highlight {
-  background: linear-gradient(120deg, #fef3c7 0%, #fde68a 100%);
-  background-size: 200% 100%;
-  animation: saspHighlight 0.8s ease-out;
-  border-radius: 2px;
-}
-
-@keyframes saspHighlight {
-  from { background-position: 100% 0; }
-  to { background-position: 0 0; }
 }

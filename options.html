@@ -24,13 +24,50 @@
           </div>
         </div>
         <div class="header-right">
-          <a href="https://github.com" target="_blank" class="help-link">帮助文档</a>
+          <a href="https://github.com/kelvinzhao/selectandplay" target="_blank" class="help-link">帮助文档</a>
         </div>
       </div>
     </header>
 
     <!-- 主内容 -->
     <main class="options-main">
+      <!-- 通用设置 -->
+      <section class="config-section">
+        <div class="section-header">
+          <div class="section-title">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M3 3l7.07 16.97 2.51-7.39 7.39-2.51L3 3z"/>
+              <path d="M13 13l6 6"/>
+            </svg>
+            <h2>交互模式</h2>
+          </div>
+        </div>
+
+        <div class="section-body">
+          <div class="mode-selector">
+            <label class="mode-option">
+              <input type="radio" name="uiMode" value="mini" checked id="modeMini">
+              <div class="mode-card">
+                <div class="mode-info">
+                  <h3>简洁版</h3>
+                  <p>选中文字后自动开始播放，只有一个暂停/继续按钮，点击空白处关闭</p>
+                </div>
+              </div>
+            </label>
+
+            <label class="mode-option">
+              <input type="radio" name="uiMode" value="standard" id="modeStandard">
+              <div class="mode-card">
+                <div class="mode-info">
+                  <h3>标准版</h3>
+                  <p>选中文字后弹出面板，显示文本预览，可手动点击播放/暂停/停止</p>
+                </div>
+              </div>
+            </label>
+          </div>
+        </div>
+      </section>
+
       <!-- Azure 配置部分 -->
       <section class="config-section" id="azureConfig">
         <div class="section-header">
@@ -47,9 +84,10 @@
 
         <div class="section-body">
           <div class="info-banner">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <circle cx="12" cy="12" r="10"/>
-              <path d="M12 16v-4m0-4h.01"/>
+              <line x1="12" y1="16" x2="12" y2="12"/>
+              <line x1="12" y1="8" x2="12" y2="8.01"/>
             </svg>
             <p>
               需要配置 Azure 语音服务才能使用。请前往
@@ -183,14 +221,14 @@
                     class="form-range speed-slider"
                     data-lang="chinese"
                     min="0.5"
-                    max="2"
+                    max="1.5"
                     step="0.1"
                     value="1"
                   >
                   <div class="range-labels">
                     <span>0.5x</span>
                     <span>1.0x</span>
-                    <span>2.0x</span>
+                    <span>1.5x</span>
                   </div>
                 </div>
                 <div class="form-actions">
@@ -225,14 +263,14 @@
                     class="form-range speed-slider"
                     data-lang="english"
                     min="0.5"
-                    max="2"
+                    max="1.5"
                     step="0.1"
                     value="1"
                   >
                   <div class="range-labels">
                     <span>0.5x</span>
                     <span>1.0x</span>
-                    <span>2.0x</span>
+                    <span>1.5x</span>
                   </div>
                 </div>
                 <div class="form-actions">
@@ -266,14 +304,14 @@
                     class="form-range speed-slider"
                     data-lang="japanese"
                     min="0.5"
-                    max="2"
+                    max="1.5"
                     step="0.1"
                     value="1"
                   >
                   <div class="range-labels">
                     <span>0.5x</span>
                     <span>1.0x</span>
-                    <span>2.0x</span>
+                    <span>1.5x</span>
                   </div>
                 </div>
                 <div class="form-actions">
@@ -289,10 +327,10 @@
       <section class="config-section">
         <div class="section-header">
           <div class="section-title">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <circle cx="12" cy="12" r="10"/>
               <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/>
-              <path d="M12 17h.01"/>
+              <line x1="12" y1="17" x2="12.01" y2="17"/>
             </svg>
             <h2>使用说明</h2>
           </div>
@@ -304,21 +342,28 @@
               <div class="step-number">1</div>
               <div class="step-content">
                 <h3>配置 Azure 服务</h3>
-                <p>在上方填写您的 Azure 语音服务密钥和区域</p>
+                <p>在上方填写您的 Azure 语音服务密钥和区域，点击"测试连接"验证</p>
               </div>
             </div>
             <div class="step-item">
               <div class="step-number">2</div>
+              <div class="step-content">
+                <h3>选择交互模式</h3>
+                <p>简洁版：选中自动播放；标准版：手动点击播放。可在上方切换</p>
+              </div>
+            </div>
+            <div class="step-item">
+              <div class="step-number">3</div>
               <div class="step-content">
                 <h3>选择语音</h3>
                 <p>为中文、英文、日文分别选择合适的语音和语速</p>
               </div>
             </div>
             <div class="step-item">
-              <div class="step-number">3</div>
+              <div class="step-number">4</div>
               <div class="step-content">
-                <h3>选中即听</h3>
-                <p>在任意网页选中文字，点击播放按钮即可听到朗读</p>
+                <h3>开始使用</h3>
+                <p>在任意网页选中文字即可朗读</p>
               </div>
             </div>
           </div>
