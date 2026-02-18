@@ -22,51 +22,6 @@
   --sasp-radius-sm: 8px;
 }
 
-/* ==================== 样式重置（隔离网站CSS） ==================== */
-.sasp-float-panel,
-.sasp-float-panel *,
-.sasp-float-panel *::before,
-.sasp-float-panel *::after {
-  all: unset;
-  display: revert;
-  box-sizing: border-box;
-}
-
-/* 恢复必要属性 */
-.sasp-float-panel *::before,
-.sasp-float-panel *::after {
-  box-sizing: border-box;
-}
-
-/* SVG 元素完全恢复 - 必须在 all:unset 之后 */
-.sasp-float-panel svg,
-.sasp-float-panel svg *,
-.sasp-float-panel svg *::before,
-.sasp-float-panel svg *::after {
-  all: revert !important;
-}
-
-/* SVG 基础样式 */
-.sasp-float-panel svg {
-  display: block !important;
-  overflow: visible !important;
-}
-
-/* 按钮 SVG 尺寸 */
-.sasp-float-panel .sasp-btn svg,
-.sasp-float-panel .sasp-header-title svg,
-.sasp-float-panel .sasp-close-btn svg {
-  width: 16px !important;
-  height: 16px !important;
-}
-
-/* 动画元素样式恢复 */
-.sasp-float-panel .sasp-spinner-mini,
-.sasp-float-panel .sasp-wave-indicator-mini,
-.sasp-float-panel .sasp-wave-bar {
-  all: revert !important;
-}
-
 /* ==================== 浮窗容器 ==================== */
 .sasp-float-panel {
   position: fixed !important;
@@ -84,6 +39,8 @@
   line-height: 1.5 !important;
   animation: saspFadeIn 0.2s ease-out !important;
   overflow: hidden !important;
+  text-align: left !important;
+  direction: ltr !important;
 }
 
 @keyframes saspFadeIn {
@@ -126,6 +83,7 @@
   width: 16px !important;
   height: 16px !important;
   display: block !important;
+  flex-shrink: 0 !important;
 }
 
 /* 语言标签 */
@@ -138,6 +96,7 @@
   font-weight: 500 !important;
   background: var(--sasp-primary) !important;
   color: white !important;
+  flex-shrink: 0 !important;
 }
 
 .sasp-lang-badge.zh {
@@ -152,11 +111,12 @@
   background: #8b5cf6 !important;
 }
 
-/* 关闭按钮 */
+/* 右侧区域 */
 .sasp-header-right {
   display: flex !important;
   align-items: center !important;
   gap: 8px !important;
+  flex-shrink: 0 !important;
 }
 
 /* 状态指示器（右上角） */
@@ -166,6 +126,7 @@
   justify-content: center !important;
   width: 20px !important;
   height: 20px !important;
+  flex-shrink: 0 !important;
 }
 
 .sasp-status-indicator.idle {
@@ -176,11 +137,17 @@
 .sasp-spinner-mini {
   width: 14px !important;
   height: 14px !important;
-  border: 2px solid currentColor !important;
+  border: 2px solid var(--sasp-primary) !important;
   border-top-color: transparent !important;
   border-radius: 50% !important;
   animation: saspSpin 0.8s linear infinite !important;
-  color: var(--sasp-primary) !important;
+  flex-shrink: 0 !important;
+}
+
+@keyframes saspSpin {
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 /* 迷你波形动画 */
@@ -189,14 +156,16 @@
   align-items: center !important;
   gap: 2px !important;
   height: 12px !important;
+  flex-shrink: 0 !important;
 }
 
 .sasp-wave-indicator-mini .sasp-wave-bar {
   width: 2px !important;
-  height: 100% !important;
+  height: 12px !important;
   background: var(--sasp-success) !important;
   border-radius: 1px !important;
   animation: saspWave 0.8s ease-in-out infinite !important;
+  flex-shrink: 0 !important;
 }
 
 .sasp-wave-indicator-mini .sasp-wave-bar:nth-child(1) {
@@ -211,8 +180,17 @@
   animation-delay: 0.3s !important;
 }
 
+@keyframes saspWave {
+  0%, 100% {
+    height: 4px !important;
+  }
+  50% {
+    height: 12px !important;
+  }
+}
+
 .sasp-status-indicator.paused {
-  font-size: 12px !important;
+  font-size: 14px !important;
   color: var(--sasp-warning) !important;
 }
 
@@ -229,6 +207,8 @@
   cursor: pointer !important;
   color: var(--sasp-text-secondary) !important;
   transition: all 0.2s !important;
+  flex-shrink: 0 !important;
+  padding: 0 !important;
 }
 
 .sasp-close-btn:hover {
@@ -280,23 +260,6 @@
   justify-content: center !important;
 }
 
-/* 动画关键帧 */
-@keyframes saspSpin {
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-@keyframes saspWave {
-  0%, 100% {
-    height: 4px !important;
-  }
-  50% {
-    height: 16px !important;
-  }
-}
-
-/* ==================== 控制按钮区域 ==================== */
 .sasp-controls {
   display: flex !important;
   gap: 8px !important;
@@ -323,6 +286,7 @@
   width: 16px !important;
   height: 16px !important;
   display: block !important;
+  flex-shrink: 0 !important;
 }
 
 /* 主按钮 */
