@@ -61,4 +61,4 @@ We may update this privacy policy from time to time. Changes will be posted in t
 If you have questions about this privacy policy, please contact us through:
 
 - GitHub Issues: https://github.com/kelvinzhao/selectandplay/issues
-- Email: [your-email@example.com] (please replace with your actual email)
+- Email: kelvin.zhao@gmail.com
