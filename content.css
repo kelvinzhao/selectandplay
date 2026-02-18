@@ -38,28 +38,33 @@
   box-sizing: border-box;
 }
 
-/* SVG 图标样式恢复 */
-.sasp-float-panel svg {
-  display: block !important;
-  width: auto !important;
-  height: auto !important;
-}
-
-/* SVG 内部元素样式恢复 */
+/* SVG 元素完全恢复 - 必须在 all:unset 之后 */
+.sasp-float-panel svg,
 .sasp-float-panel svg *,
 .sasp-float-panel svg *::before,
 .sasp-float-panel svg *::after {
-  all: revert;
+  all: revert !important;
+}
+
+/* SVG 基础样式 */
+.sasp-float-panel svg {
+  display: block !important;
+  overflow: visible !important;
+}
+
+/* 按钮 SVG 尺寸 */
+.sasp-float-panel .sasp-btn svg,
+.sasp-float-panel .sasp-header-title svg,
+.sasp-float-panel .sasp-close-btn svg {
+  width: 16px !important;
+  height: 16px !important;
 }
 
 /* 动画元素样式恢复 */
 .sasp-float-panel .sasp-spinner-mini,
 .sasp-float-panel .sasp-wave-indicator-mini,
-.sasp-float-panel .sasp-wave-bar,
-.sasp-float-panel .sasp-spinner-mini *,
-.sasp-float-panel .sasp-wave-indicator-mini *,
-.sasp-float-panel .sasp-wave-bar * {
-  all: revert;
+.sasp-float-panel .sasp-wave-bar {
+  all: revert !important;
 }
 
 /* ==================== 浮窗容器 ==================== */
