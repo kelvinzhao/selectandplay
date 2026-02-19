@@ -15,10 +15,19 @@
   chrome.runtime.onInstalled.addListener((details) => {
     console.log('[Select & Play] 扩展已安装/更新:', details.reason);
 
+    // 设置图标（无论安装还是更新都需要根据当前状态设置图标）
+    chrome.storage.sync.get(['isEnabled'], (result) => {
+      const isEnabled = result.isEnabled !== false;
+      updateIcon(isEnabled);
+      console.log('[Select & Play] 图标已初始化:', isEnabled ? '启用' : '禁用');
+    });
+
     if (details.reason === 'install') {
       // 首次安装，初始化默认状态
       chrome.storage.sync.set(DEFAULT_STATE, () => {
         console.log('[Select & Play] 默认状态已设置');
+        // 设置初始图标
+        updateIcon(true);
       });
 
       // 打开设置页面
@@ -67,9 +76,21 @@
   });
 
   // ==================== 启动时更新图标 ====================
-  chrome.storage.sync.get(['isEnabled'], (result) => {
-    const isEnabled = result.isEnabled !== false;
-    updateIcon(isEnabled);
+  function initializeIcon() {
+    chrome.storage.sync.get(['isEnabled'], (result) => {
+      const isEnabled = result.isEnabled !== false;
+      updateIcon(isEnabled);
+      console.log('[Select & Play] 图标已初始化:', isEnabled ? '启用' : '禁用');
+    });
+  }
+
+  // Service Worker 启动时初始化
+  initializeIcon();
+
+  // Service Worker 被唤醒时也需要确保图标正确
+  chrome.runtime.onStartup.addListener(() => {
+    console.log('[Select & Play] 浏览器启动，初始化图标');
+    initializeIcon();
   });
 
   /**
